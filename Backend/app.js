@@ -1,6 +1,14 @@
 const express = require('express');
+const mongoose = require ('mongoose')
 
 const app = express();
+
+mongoose.connect('mongodb+srv://charles:charles2023@cluster0.eqlilbc.mongodb.net/?retryWrites=true&w=majority',
+  { useNewUrlParser: true,
+    useUnifiedTopology: true })
+  .then(() => console.log('Connexion à MongoDB réussie !'))
+  .catch(() => console.log('Connexion à MongoDB échouée !'));
+
 app.use(express.json());
 
 app.use((req, res, next) => {
@@ -11,7 +19,7 @@ app.use((req, res, next) => {
 });
 
 app.use('/api/books', (req, res, next) => {
-  const stuff = [
+  const books = [
     {
       _id: 'oeihfzeoi',
       title: 'Mon premier objet',
@@ -29,7 +37,7 @@ app.use('/api/books', (req, res, next) => {
       userId: 'qsomihvqios',
     },
   ];
-  res.status(200).json(stuff);
+  res.status(200).json(books);
 });
 
 
