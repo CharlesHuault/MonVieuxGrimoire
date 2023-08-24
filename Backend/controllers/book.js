@@ -92,29 +92,38 @@ exports.rateBook = async (req, res, next) => {
     try {
         const userId = req.auth.userId;
         const rating = req.body.rating;
-        const book = await Book.findOne({ _id: req.params.id });
+        const bookId = req.params.id;
+
+        if (rating < 0 || rating > 5) {
+            return res.status(400).json({ message: 'La note doit être comprise entre 0 et 5' });
+        }
+
+        const book = await Book.findById(bookId);
 
         if (!book) {
             return res.status(404).json({ message: 'Livre non trouvé' });
         }
-        const userRatingIndex = book.ratings.findIndex(rating => rating.userId === userId); // On vérifie si le user n'a pas déja noté le livre
-        if (userRatingIndex !== -1) { // Il a déjà noté donc on met sa note à jour        
-            book.ratings[userRatingIndex].grade = rating;
-        } else { // Il n'a pas noté donc on crée sa note         
-            book.ratings.push({ userId, grade: rating });
+
+        const userRatingIndex = book.ratings.findIndex(rating => rating.userId === userId);
+
+        if (userRatingIndex !== -1) {
+            return res.status(400).json({ message: 'Vous avez déjà noté ce livre' });
         }
 
-        // Calcul de la nouvelle note moyenne
+        book.ratings.push({ userId, grade: rating });
+
         const totalRatings = book.ratings.length;
         const totalGrade = book.ratings.reduce((sum, rating) => sum + rating.grade, 0);
         const averageRating = totalGrade / totalRatings;
 
         book.averageRating = averageRating;
-        // Sauvegarde du livre avec sa note moyenne mise à jour
-        await book.save();
 
-        res.status(200).json({ message: 'Note enregistrée !' });
+        const savedBook = await book.save();
+
+        res.status(200).json(savedBook);
     } catch (error) {
         res.status(500).json({ error });
     }
 };
+    
+
